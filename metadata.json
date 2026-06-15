@@ -1,0 +1,6 @@
+{
+  "name": "DevNet",
+  "description": "A professional high-performance social network built for developers and programmers, powered by Firebase and Cloudinary.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

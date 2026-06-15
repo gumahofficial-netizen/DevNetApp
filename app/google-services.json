@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "451332525319",
+    "project_id": "devnet-901bd",
+    "storage_bucket": "devnet-901bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451332525319:android:5fdefbdcfae380e44d89a2",
+        "android_client_info": {
+          "package_name": "com.gumah.devnet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "451332525319-4nsjjdfci5685k88ej82iqfb40ricpbr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFAQ4M7tudkdOEQ7e7HeXXcprAszuA3Js"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "451332525319-4nsjjdfci5685k88ej82iqfb40ricpbr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
