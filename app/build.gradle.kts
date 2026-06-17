@@ -20,6 +20,14 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    val cloudName: String = (project.findProperty("CLOUDINARY_CLOUD_NAME") as? String) ?: ""
+    val cloudKey: String = (project.findProperty("CLOUDINARY_API_KEY") as? String) ?: ""
+    val cloudSecret: String = (project.findProperty("CLOUDINARY_API_SECRET") as? String) ?: ""
+    val cloudPreset: String = (project.findProperty("CLOUDINARY_UPLOAD_PRESET") as? String) ?: ""
+    buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudName\"")
+    buildConfigField("String", "CLOUDINARY_API_KEY", "\"$cloudKey\"")
+    buildConfigField("String", "CLOUDINARY_API_SECRET", "\"$cloudSecret\"")
+    buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudPreset\"")
   }
 
   signingConfigs {
@@ -31,10 +39,13 @@ android {
       keyPassword = System.getenv("KEY_PASSWORD")
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      val debugKeystoreFile = file("${rootDir}/debug.keystore")
+      if (debugKeystoreFile.exists()) {
+        storeFile = debugKeystoreFile
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      }
     }
   }
 
@@ -43,10 +54,16 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("debugConfig")
+      val debugConfig = signingConfigs.findByName("debugConfig")
+      if (debugConfig != null && debugConfig.storeFile != null) {
+        signingConfig = debugConfig
+      }
     }
     debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
+      val debugConfig = signingConfigs.findByName("debugConfig")
+      if (debugConfig != null && debugConfig.storeFile != null) {
+        signingConfig = debugConfig
+      }
     }
   }
   compileOptions {

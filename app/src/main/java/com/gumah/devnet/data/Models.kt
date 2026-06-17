@@ -152,6 +152,14 @@ data class DevNotification(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+data class Draft(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String = "",
+    val text: String = "",
+    val tags: List<String> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 enum class BadgeType(
     val englishName: String,
     val arabicName: String,

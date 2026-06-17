@@ -31,6 +31,7 @@ sealed class Screen {
     object Login : Screen()
     object SignUp : Screen()
     object MainApp : Screen()
+    object CreatePost : Screen()
     data class ProfileDetail(val userId: String) : Screen()
     data class ChatRoom(val conversationId: String) : Screen()
     object Inbox : Screen()
@@ -118,6 +119,7 @@ fun DevNetNavigationRoot() {
                         onNavigateToChat = { convId -> navigateTo(Screen.ChatRoom(convId)) },
                         onNavigateToInbox = { navigateTo(Screen.Inbox) },
                         onNavigateToSignals = { navigateTo(Screen.Signals) },
+                        onNavigateToCreatePost = { navigateTo(Screen.CreatePost) },
                         onLogout = {
                             DevNetRepository.logout()
                             screenStack.clear()
@@ -158,6 +160,12 @@ fun DevNetNavigationRoot() {
                         onNavigateBack = { navigateBack() }
                     )
                 }
+                is Screen.CreatePost -> {
+                    CreatePostScreen(
+                        onPostCreated = { _ -> navigateBack() },
+                        onCancel = { navigateBack() }
+                    )
+                }
             }
         }
     }
@@ -170,6 +178,7 @@ fun MainAppScaffold(
     onNavigateToChat: (String) -> Unit,
     onNavigateToInbox: () -> Unit,
     onNavigateToSignals: () -> Unit,
+    onNavigateToCreatePost: () -> Unit,
     onLogout: () -> Unit
 ) {
     var activeTab by remember { mutableStateOf("Feed") } // Feed, Search, Projects, MyProfile
@@ -178,6 +187,11 @@ fun MainAppScaffold(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color(0xFF0F172A),
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNavigateToCreatePost, containerColor = Color(0xFF2DD4BF)) {
+                Icon(Icons.Default.Add, contentDescription = "Create")
+            }
+        },
         bottomBar = {
             NavigationBar(
                 containerColor = Color(0xFF1E293B),

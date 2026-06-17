@@ -1,0 +1,48 @@
+name: Android CI - Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl gradle
+
+      - name: Install Android SDK command line tools
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          curl -o /tmp/cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip /tmp/cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          yes | $HOME/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Create Gradle wrapper (if missing)
+        run: |
+          if [ ! -f ./gradlew ]; then
+            gradle wrapper
+          fi
+
+      - name: Build Debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk

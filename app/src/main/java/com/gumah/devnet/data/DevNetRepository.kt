@@ -217,6 +217,67 @@ object DevNetRepository {
         }
     }
 
+    // Drafts persistence (local JSON file)
+    suspend fun saveDraft(draft: Draft) = withContext(Dispatchers.IO) {
+        val context = appContext ?: return@withContext
+        try {
+            val type = Types.newParameterizedType(List::class.java, Draft::class.java)
+            val adapter = moshi.adapter<List<Draft>>(type)
+            val existing = try {
+                val file = context.getFileStreamPath("drafts.json")
+                if (file != null && file.exists()) {
+                    val json = file.readText()
+                    adapter.fromJson(json) ?: emptyList()
+                } else emptyList()
+            } catch (_: Exception) { emptyList() }
+
+            val updated = listOf(draft) + existing.filter { it.id != draft.id }
+            val out = adapter.toJson(updated)
+            context.openFileOutput("drafts.json", Context.MODE_PRIVATE).use { it.write(out.toByteArray()) }
+            Log.d(TAG, "Saved draft locally: ${draft.id}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving draft", e)
+        }
+    }
+
+    fun loadDrafts(): List<Draft> {
+        val context = appContext ?: return emptyList()
+        try {
+            val file = context.getFileStreamPath("drafts.json")
+            if (file != null && file.exists()) {
+                val json = file.readText()
+                val type = Types.newParameterizedType(List::class.java, Draft::class.java)
+                val adapter = moshi.adapter<List<Draft>>(type)
+                return adapter.fromJson(json) ?: emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading drafts", e)
+        }
+        return emptyList()
+    }
+
+    suspend fun deleteDraft(draftId: String) = withContext(Dispatchers.IO) {
+        val context = appContext ?: return@withContext
+        try {
+            val type = Types.newParameterizedType(List::class.java, Draft::class.java)
+            val adapter = moshi.adapter<List<Draft>>(type)
+            val existing = try {
+                val file = context.getFileStreamPath("drafts.json")
+                if (file != null && file.exists()) {
+                    val json = file.readText()
+                    adapter.fromJson(json) ?: emptyList()
+                } else emptyList()
+            } catch (_: Exception) { emptyList() }
+
+            val updated = existing.filter { it.id != draftId }
+            val out = adapter.toJson(updated)
+            context.openFileOutput("drafts.json", Context.MODE_PRIVATE).use { it.write(out.toByteArray()) }
+            Log.d(TAG, "Deleted draft: $draftId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting draft", e)
+        }
+    }
+
     // Firebase instances with lazy safe access
     val auth: FirebaseAuth? by lazy {
         try { FirebaseAuth.getInstance() } catch (e: Exception) {
@@ -768,6 +829,14 @@ object DevNetRepository {
         // 2. Create Firebase Auth account
         val firebaseUser = auth?.createUserWithEmailAndPassword(emailAddress, passwordRaw)?.await()?.user
         val uId = firebaseUser?.uid ?: "user_mock_${System.currentTimeMillis()}"
+
+        // Send verification email when possible
+        try {
+            firebaseUser?.sendEmailVerification()?.await()
+            Log.d(TAG, "Verification email sent to ${firebaseUser?.email}")
+        } catch (e: Exception) {
+            Log.d(TAG, "Could not send verification email: ${e.message}")
+        }
 
         val profile = UserProfile(
             id = uId,

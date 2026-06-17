@@ -3,6 +3,7 @@ package com.gumah.devnet.data
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.gumah.devnet.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -16,9 +17,10 @@ import java.util.concurrent.TimeUnit
 
 object CloudinaryHelper {
     private const val TAG = "CloudinaryHelper"
-    private const val CLOUD_NAME = "dqgsepaus"
-    private const val API_KEY = "799621938941556"
-    private const val API_SECRET = "tMdtOXb6egJ2_0LJyIDTLmffPvY"
+    private val CLOUD_NAME = BuildConfig.CLOUDINARY_CLOUD_NAME
+    private val API_KEY = BuildConfig.CLOUDINARY_API_KEY
+    private val API_SECRET = BuildConfig.CLOUDINARY_API_SECRET
+    private val UPLOAD_PRESET = BuildConfig.CLOUDINARY_UPLOAD_PRESET
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -51,8 +53,8 @@ object CloudinaryHelper {
             
             // To sign: alphabetical sort of variables + api_secret at the end
             // timestamp=<timestamp><api_secret>
-            val stringToSign = "timestamp=$timestamp$API_SECRET"
-            val signature = sha1(stringToSign)
+            val useUnsigned = UPLOAD_PRESET.isNotBlank() && API_SECRET.isBlank()
+            val signature = if (useUnsigned) null else sha1("timestamp=$timestamp$API_SECRET")
 
             val endpoint = "https://api.cloudinary.com/v1_1/$CLOUD_NAME/$fileType/upload"
 
@@ -66,7 +68,12 @@ object CloudinaryHelper {
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("api_key", API_KEY)
                 .addFormDataPart("timestamp", timestamp)
-                .addFormDataPart("signature", signature)
+            if (useUnsigned) {
+                // unsigned upload using upload preset
+                requestBodyBuilder.addFormDataPart("upload_preset", UPLOAD_PRESET)
+            } else {
+                requestBodyBuilder.addFormDataPart("signature", signature)
+            }
                 .addFormDataPart(
                     "file", 
                     fileName, 
