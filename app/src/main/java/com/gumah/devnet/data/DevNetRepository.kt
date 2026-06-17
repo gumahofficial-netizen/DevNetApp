@@ -673,6 +673,39 @@ object DevNetRepository {
                 }
             }
         }
+
+        // Realtime sync conversations for current logged-in user
+        firestore.collection("conversations").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e(TAG, "Error syncing conversations", error)
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val list = mutableListOf<Conversation>()
+                val currentUid = auth?.currentUser?.uid ?: _currentUser.value?.id
+                for (doc in snapshot.documents) {
+                    try {
+                        val conv = doc.toObject(Conversation::class.java)
+                        if (conv != null) {
+                            val finalConv = if (conv.id.isEmpty()) conv.copy(id = doc.id) else conv
+                            if (currentUid != null && finalConv.participantIds.contains(currentUid)) {
+                                list.add(finalConv)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error parsing conversation document ${doc.id}", e)
+                    }
+                }
+                memoryConversations.clear()
+                memoryConversations.addAll(list)
+                _conversations.value = list.sortedByDescending { it.lastMessageTime }
+                
+                // Save updated conversations locally
+                CoroutineScope(Dispatchers.IO).launch {
+                    saveConversationsToLocal()
+                }
+            }
+        }
     }
 
     fun listenToMessages(conversationId: String) {

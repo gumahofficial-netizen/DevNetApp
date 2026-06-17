@@ -927,10 +927,10 @@ fun ChatBubble(
                         if (message.mediaUrl.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(6.dp))
                             if (message.mediaType == "audio") {
-                                VoiceMessagePlayer(audioUrl = message.mediaUrl)
+                                CustomVoiceMessagePlayer(audioUrl = message.mediaUrl)
                             } else if (message.mediaType == "video") {
                                 Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
-                                    ChatVideoPlayer(videoUrl = message.mediaUrl)
+                                    DevNetVideoPlayer(videoUrl = message.mediaUrl)
                                     
                                     // Chat Video Download Overlay Action Button
                                     IconButton(

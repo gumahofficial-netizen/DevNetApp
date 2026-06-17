@@ -82,6 +82,7 @@ class ExampleUnitTest {
     // 3. Find DevNet.apk and DevNet-debug.apk
     // Let's check typical parent locations since tests execute in `/app/applet/app`
     val searchFiles = listOf(
+      "app-debug.apk" to listOf("/app/app-debug.apk", "../app-debug.apk", "./app-debug.apk", "/.build-outputs/app-debug.apk"),
       "DevNet.apk" to listOf("/app/DevNet.apk", "../../DevNet.apk", "../DevNet.apk", "./DevNet.apk"),
       "DevNet-debug.apk" to listOf("/app/DevNet-debug.apk", "../../DevNet-debug-apk", "../../DevNet-debug.apk", "../DevNet-debug.apk", "./DevNet-debug.apk")
     )

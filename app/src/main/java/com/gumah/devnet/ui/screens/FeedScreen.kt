@@ -874,17 +874,17 @@ fun PostCard(
                 if (post.mediaType == "video") {
                     var isPlaying by remember { mutableStateOf(false) }
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.Black)
-                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
-                                .clickable { isPlaying = !isPlaying },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (!isPlaying) {
+                        if (!isPlaying) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.Black)
+                                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                                    .clickable { isPlaying = true },
+                                contentAlignment = Alignment.Center
+                            ) {
                                 AsyncImage(
                                     model = firstUrl,
                                     contentDescription = "Video preview thumbnail",
@@ -893,32 +893,19 @@ fun PostCard(
                                 )
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
-                                        .background(Color.Black.copy(alpha = 0.65f), CircleShape),
+                                        .size(54.dp)
+                                        .background(Color.Black.copy(alpha = 0.7f), CircleShape)
+                                        .border(1.5.dp, Color(0xFF38BDF8), CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play Feed Video", tint = Color.White)
+                                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play Feed Video", tint = Color(0xFF38BDF8), modifier = Modifier.size(28.dp))
                                 }
-                            } else {
-                                AndroidView(
-                                    factory = { ctx ->
-                                        android.widget.VideoView(ctx).apply {
-                                            setVideoURI(android.net.Uri.parse(firstUrl))
-                                            val mediaController = android.widget.MediaController(ctx)
-                                            mediaController.setAnchorView(this)
-                                            setMediaController(mediaController)
-                                            setOnPreparedListener { mp ->
-                                                mp.isLooping = true
-                                                start()
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxSize(),
-                                    onRelease = { videoView ->
-                                        videoView.stopPlayback()
-                                    }
-                                )
                             }
+                        } else {
+                            DevNetVideoPlayer(
+                                videoUrl = firstUrl,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                         
                         // Overlay Download Button for Video
@@ -1890,9 +1877,25 @@ fun formatTime(timestamp: Long): String {
 }
 
 fun extractYouTubeVideoId(text: String): String? {
-    val regex = "(?:youtube\\.com\\/(?:[^\\/\\n\\s]+\\/\\S+\\/|(?:v|e(?:mbed)?)\\/|\\S*?[?&]v=)|youtu\\.be\\/)([a-zA-Z0-9_-]{11})".toRegex()
-    val matchResult = regex.find(text)
-    return matchResult?.groupValues?.get(1)
+    if (text.isBlank()) return null
+    // List of prioritized patterns for matching YouTube URL schemes including shorts, live and mobile formats
+    val patterns = listOf(
+        "youtube\\.com\\/shorts\\/([a-zA-Z0-9_-]{11})",
+        "youtube\\.com\\/live\\/([a-zA-Z0-9_-]{11})",
+        "youtube\\.com\\/watch\\?v=([a-zA-Z0-9_-]{11})",
+        "youtu\\.be\\/([a-zA-Z0-9_-]{11})",
+        "youtube\\.com\\/embed\\/([a-zA-Z0-9_-]{11})",
+        "youtube\\.com\\/v\\/([a-zA-Z0-9_-]{11})",
+        "[?&]v=([a-zA-Z0-9_-]{11})"
+    )
+    for (pattern in patterns) {
+        val regex = pattern.toRegex(RegexOption.IGNORE_CASE)
+        val match = regex.find(text)
+        if (match != null && match.groupValues.size > 1) {
+            return match.groupValues[1]
+        }
+    }
+    return null
 }
 
 @Composable
